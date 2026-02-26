@@ -86,20 +86,6 @@ namespace PuzzleGame.EditorTools
             roomManager.hotspotsRight = CreateHotspotContainer("Hotspots_Right", hotspotsParent.transform);
             roomManager.hotspotsLeft = CreateHotspotContainer("Hotspots_Left", hotspotsParent.transform);
 
-            // Add specific predefined Hotspots to Main View
-            CreateHotspotObject("DoorFinal", roomManager.hotspotsMain.transform, "Door_Zoom", new Vector2(0.3f, 0.2f), new Vector2(0.7f, 0.9f));
-            CreateHotspotObject("Boxes", roomManager.hotspotsMain.transform, "Boxes_Zoom", new Vector2(0f, 0f), new Vector2(0.3f, 0.4f));
-            CreateHotspotObject("Desk", roomManager.hotspotsMain.transform, "Desk_Zoom", new Vector2(0.6f, 0f), new Vector2(1f, 0.5f));
-
-            // Add specific predefined Hotspots to Right View
-            CreateHotspotObject("ShelfLeftDolls", roomManager.hotspotsRight.transform, "ShelfLeftDolls_Zoom", new Vector2(0.1f, 0.3f), new Vector2(0.4f, 0.8f));
-            CreateHotspotObject("ShelfMiddleJars", roomManager.hotspotsRight.transform, "ShelfMiddleJars_Zoom", new Vector2(0.4f, 0.3f), new Vector2(0.7f, 0.8f));
-            CreateHotspotObject("ArmchairTear", roomManager.hotspotsRight.transform, "ArmchairTear_Zoom", new Vector2(0.7f, 0.1f), new Vector2(0.9f, 0.5f));
-
-            // Add specific predefined Hotspots to Left View
-            CreateHotspotObject("CurvedShelfLeft", roomManager.hotspotsLeft.transform, "CurvedShelfLeft_Zoom", new Vector2(0.1f, 0.2f), new Vector2(0.3f, 0.8f));
-            CreateHotspotObject("DeskAgain", roomManager.hotspotsLeft.transform, "DeskAgain_Zoom", new Vector2(0.5f, 0.1f), new Vector2(0.9f, 0.6f));
-
             // 7. Create Zoom Panel
             GameObject zoomPanelObj = new GameObject("ZoomPanel");
             zoomPanelObj.transform.SetParent(canvas.transform, false);
@@ -124,7 +110,7 @@ namespace PuzzleGame.EditorTools
 
             zoomPanelObj.SetActive(false);
 
-            Debug.Log("Puzzle Game Room UI successfully generated with Default Hotspots!");
+            Debug.Log("Puzzle Game Room UI successfully generated!");
             Selection.activeGameObject = roomManagerObj;
         }
 
@@ -150,26 +136,6 @@ namespace PuzzleGame.EditorTools
             container.transform.SetParent(parent, false);
             SetStretchRect(container.AddComponent<RectTransform>());
             return container;
-        }
-
-        private static void CreateHotspotObject(string name, Transform parent, string hotspotId, Vector2 anchorMin, Vector2 anchorMax)
-        {
-            GameObject hotspotObj = new GameObject(name);
-            hotspotObj.transform.SetParent(parent, false);
-            
-            RectTransform rect = hotspotObj.AddComponent<RectTransform>();
-            rect.anchorMin = anchorMin;
-            rect.anchorMax = anchorMax;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
-
-            Image img = hotspotObj.AddComponent<Image>();
-            img.color = new Color(1f, 1f, 1f, 0.2f); // Semi-transparent white to easily see them during setup
-            
-            Button btn = hotspotObj.AddComponent<Button>();
-            
-            PuzzleGame.Interaction.Hotspot hotspotScript = hotspotObj.AddComponent<PuzzleGame.Interaction.Hotspot>();
-            hotspotScript.hotspotId = hotspotId;
         }
 
         private static void SetStretchRect(RectTransform rect)
