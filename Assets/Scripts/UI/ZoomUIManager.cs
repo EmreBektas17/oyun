@@ -69,10 +69,23 @@ namespace PuzzleGame.UI
             }
         }
 
+        [Header("Animation Settings")]
+        [Tooltip("How long the zoom animation takes (in seconds)")]
+        public float zoomAnimationDuration = 0.25f;
+
+        private Coroutine zoomCoroutine;
+
         private void Start()
         {
             if (zoomPanel != null)
             {
+                // Ensure fully transparent and inactive initially
+                Image panelBg = zoomPanel.GetComponent<Image>();
+                if (panelBg != null)
+                {
+                    Color c = panelBg.color;
+                    panelBg.color = new Color(c.r, c.g, c.b, 0f);
+                }
                 zoomPanel.SetActive(false);
             }
 
@@ -92,9 +105,16 @@ namespace PuzzleGame.UI
 
             if (sprite != null)
             {
+                // Ensure the GameObject this script is attached to is active, otherwise Coroutine won't run.
+                gameObject.SetActive(true);
+                zoomPanel.SetActive(true); // Must be active to run coroutines if attached here
+
                 zoomImage.sprite = sprite;
-                currentLockedMessage = lockedMessage; // Store the message meant for the *zoomed* state
-                zoomPanel.SetActive(true);
+                currentLockedMessage = lockedMessage;
+                
+                if (zoomCoroutine != null) StopCoroutine(zoomCoroutine);
+                zoomCoroutine = StartCoroutine(AnimateZoom(true));
+                
                 Debug.Log($"Zoom opened for hotspot: {hotspotId}");
             }
             else
@@ -107,9 +127,86 @@ namespace PuzzleGame.UI
         {
             if (zoomPanel != null)
             {
-                zoomPanel.SetActive(false);
-                currentLockedMessage = ""; // Clear on close
+                currentLockedMessage = "";
+                
+                if (zoomCoroutine != null) StopCoroutine(zoomCoroutine);
+                zoomCoroutine = StartCoroutine(AnimateZoom(false));
+
                 Debug.Log("Zoom closed.");
+            }
+        }
+
+        private IEnumerator AnimateZoom(bool isOpening)
+        {
+            float elapsedTime = 0f;
+            Image panelBg = zoomPanel.GetComponent<Image>();
+            
+            // Starting states
+            if (isOpening)
+            {
+                zoomPanel.SetActive(true);
+                zoomImage.transform.localScale = Vector3.one * 0.5f; // Start small
+                
+                // Start panel transparent
+                if (panelBg != null)
+                {
+                    Color c = panelBg.color;
+                    panelBg.color = new Color(c.r, c.g, c.b, 0f);
+                }
+                
+                // Start image transparent
+                Color imgC = zoomImage.color;
+                zoomImage.color = new Color(imgC.r, imgC.g, imgC.b, 0f);
+            }
+
+            Vector3 startScale = isOpening ? Vector3.one * 0.5f : Vector3.one;
+            Vector3 targetScale = isOpening ? Vector3.one : Vector3.one * 0.5f;
+            float startAlpha = isOpening ? 0f : 0.9f; 
+            float targetAlpha = isOpening ? 0.9f : 0f;
+            
+            float startAlphaImg = isOpening ? 0f : 1f;
+            float targetAlphaImg = isOpening ? 1f : 0f;
+
+            while (elapsedTime < zoomAnimationDuration)
+            {
+                elapsedTime += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsedTime / zoomAnimationDuration);
+                
+                // Smooth Step for nicer easing
+                t = t * t * (3f - 2f * t);
+
+                // Animate Scale
+                zoomImage.transform.localScale = Vector3.Lerp(startScale, targetScale, t);
+
+                // Animate Panel Background Alpha
+                if (panelBg != null)
+                {
+                    Color c = panelBg.color;
+                    panelBg.color = new Color(c.r, c.g, c.b, Mathf.Lerp(startAlpha, targetAlpha, t));
+                }
+
+                // Animate Image Alpha
+                Color imgColor = zoomImage.color;
+                zoomImage.color = new Color(imgColor.r, imgColor.g, imgColor.b, Mathf.Lerp(startAlphaImg, targetAlphaImg, t));
+
+                yield return null;
+            }
+
+            // Guarantee final state
+            zoomImage.transform.localScale = targetScale;
+            if (panelBg != null)
+            {
+                Color c = panelBg.color;
+                panelBg.color = new Color(c.r, c.g, c.b, targetAlpha);
+            }
+            
+            Color finalImgColor = zoomImage.color;
+            zoomImage.color = new Color(finalImgColor.r, finalImgColor.g, finalImgColor.b, targetAlphaImg);
+
+            // Hide if closing
+            if (!isOpening)
+            {
+                zoomPanel.SetActive(false);
             }
         }
 
